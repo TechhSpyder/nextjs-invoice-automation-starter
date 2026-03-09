@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PDFBridge, PDFBridgeError } from "@techhspyder/pdfbridge-node";
 
 export const maxDuration = 60;
 
 /**
  * POST /api/extract
  *
- * Accepts a PDF file upload, sends it to PDFBridge for direct
- * AI invoice extraction, and returns the structured InvoiceExtractionResult.
- *
- * This runs on the server — your PDFBRIDGE_API_KEY is never exposed to the browser.
+ * Uses the official PDFBridge SDK to extract structured AI data from a PDF.
  */
 export async function POST(req: NextRequest) {
   const apiKey = process.env.PDFBRIDGE_API_KEY;
-  const baseUrl =
-    process.env.PDFBRIDGE_BASE_URL ?? "https://api.pdfbridge.xyz/api/v1";
+  const baseUrl = process.env.PDFBRIDGE_BASE_URL;
 
   if (!apiKey) {
     return NextResponse.json(
@@ -21,6 +18,8 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+
+  const client = new PDFBridge({ apiKey, baseUrl });
 
   try {
     const formData = await req.formData();
@@ -33,69 +32,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Step 1: Submit DIRECTLY to PDFBridge /extract endpoint
-    // This accepts the PDF file directly, bypassing Gotenberg rendering
-    const pdfBlob = new Blob([await file.arrayBuffer()], {
-      type: "application/pdf",
-    });
-    const extractFormData = new FormData();
-    extractFormData.append("file", pdfBlob, file.name);
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    const submitResponse = await fetch(`${baseUrl}/extract`, {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-      },
-      body: extractFormData,
+    // Use the official SDK's extractAndWait for a seamless experience
+    const job = await client.extractAndWait(buffer, {
+      filename: file.name,
     });
 
-    if (!submitResponse.ok) {
-      const err = await submitResponse.json().catch(() => ({}));
+    return NextResponse.json({
+      jobId: job.id,
+      aiMetadata: job.aiMetadata || null,
+    });
+  } catch (err: any) {
+    console.error("[extract] Error:", err);
+
+    if (err instanceof PDFBridgeError) {
       return NextResponse.json(
-        { error: err.message || "Failed to submit to PDFBridge." },
-        { status: submitResponse.status },
+        { error: err.message },
+        { status: err.statusCode || 500 },
       );
     }
 
-    const { jobId } = await submitResponse.json();
-
-    // Step 2: Poll for the job result (max 30 attempts × 1s = 30s)
-    for (let attempt = 0; attempt < 30; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const statusResponse = await fetch(`${baseUrl}/jobs/${jobId}`, {
-        headers: { "x-api-key": apiKey },
-      });
-
-      if (!statusResponse.ok) continue;
-
-      const job = await statusResponse.json();
-
-      // The API returns 'status' as 'SUCCESS', 'FAILED', 'PENDING', or 'PROCESSING'
-      const status = job.status?.toUpperCase();
-
-      if (status === "SUCCESS" || status === "DONE") {
-        return NextResponse.json({
-          jobId,
-          pdfUrl: job.result?.url || job.url,
-          aiMetadata: job.result?.aiMetadata || job.aiMetadata || null,
-        });
-      }
-
-      if (status === "FAILED") {
-        return NextResponse.json(
-          { error: job.result?.error || "Job failed during processing." },
-          { status: 422 },
-        );
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Job timed out after 30 seconds. Please try again." },
-      { status: 504 },
-    );
-  } catch (err: any) {
-    console.error("[extract] Error:", err);
     return NextResponse.json(
       { error: "An unexpected error occurred." },
       { status: 500 },

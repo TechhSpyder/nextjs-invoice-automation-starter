@@ -11,6 +11,8 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  Sparkles,
+  BarChart3,
 } from "lucide-react";
 
 interface LineItem {
@@ -112,6 +114,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InvoiceResult | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [smartNormalize, setSmartNormalize] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback(async (file: File) => {
@@ -129,7 +132,8 @@ export default function HomePage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/extract", {
+      const endpoint = smartNormalize ? "/api/normalize" : "/api/extract";
+      const res = await fetch(endpoint, {
         method: "POST",
         body: formData,
       });
@@ -180,6 +184,41 @@ export default function HomePage() {
             Drop any invoice PDF below. PDFBridge extracts vendor, line items,
             totals, and currency — guaranteed same schema every time.
           </p>
+
+          <div className="flex justify-center gap-4 pt-4">
+            <a
+              href="/reports/analytics"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold hover:scale-105 transition-all shadow-lg shadow-blue-500/20"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Try Analytics Export →
+            </a>
+          </div>
+
+          <div className="flex justify-center pt-2">
+            <button
+              onClick={() => setSmartNormalize(!smartNormalize)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all duration-200 ${
+                smartNormalize
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                  : "bg-slate-800/40 border-slate-700/60 text-slate-400 opacity-60 hover:opacity-100"
+              }`}
+            >
+              <Sparkles
+                className={`w-4 h-4 ${smartNormalize ? "animate-pulse" : ""}`}
+              />
+              <span className="text-sm font-semibold uppercase tracking-tight">
+                Smart Normalization
+              </span>
+              <div
+                className={`w-8 h-4 rounded-full relative transition-colors ${smartNormalize ? "bg-emerald-500/40" : "bg-slate-700"}`}
+              >
+                <div
+                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${smartNormalize ? "right-0.5" : "left-0.5"}`}
+                />
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Upload Zone */}
