@@ -67,12 +67,13 @@ export async function POST(req: NextRequest) {
           <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8">
             <h3 class="font-bold text-lg mb-8 uppercase tracking-widest text-slate-400">Revenue Growth</h3>
             <div class="h-48 flex items-end justify-between gap-4">
-              <div class="w-full bg-blue-600 rounded-t-lg" style="height: 40%"></div>
-              <div class="w-full bg-blue-600 rounded-t-lg" style="height: 65%"></div>
-              <div class="w-full bg-blue-600 rounded-t-lg" style="height: 45%"></div>
-              <div class="w-full bg-blue-600 rounded-t-lg" style="height: 90%"></div>
-              <div class="w-full bg-blue-600 rounded-t-lg" style="height: 75%"></div>
-              <div class="w-full bg-blue-600 rounded-t-lg" style="height: 100%"></div>
+            <div class="h-48 flex items-end justify-between gap-4">
+              <div class="flex-1 bg-blue-600 rounded-t-lg" style="height: 40%"></div>
+              <div class="flex-1 bg-blue-600 rounded-t-lg" style="height: 65%"></div>
+              <div class="flex-1 bg-blue-600 rounded-t-lg" style="height: 45%"></div>
+              <div class="flex-1 bg-blue-600 rounded-t-lg" style="height: 90%"></div>
+              <div class="flex-1 bg-blue-600 rounded-t-lg" style="height: 75%"></div>
+              <div class="flex-1 bg-blue-600 rounded-t-lg" style="height: 100%"></div>
             </div>
             <div class="flex justify-between mt-4 text-[10px] text-slate-600 font-bold uppercase tracking-tighter">
               <span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span>
@@ -106,7 +107,8 @@ export async function POST(req: NextRequest) {
       </html>
     `;
 
-    const job = await client.convertAndWait(html, {
+    const job = await client.convertAndWait({
+      html,
       filename: `performance_report_${Date.now()}.pdf`,
       tailwind: true
     });
