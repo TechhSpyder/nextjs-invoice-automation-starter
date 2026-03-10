@@ -33,11 +33,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Call the orchestrator with the raw file buffer
+    // The Next.js formData.get() already returns a standard Web API File object.
+    // Call the orchestrator with the raw File object directly.
     const response = await client.normalizeInvoice({
-      file: buffer,
+      file: file,
       filename: file.name,
     });
 

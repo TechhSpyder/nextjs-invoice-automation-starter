@@ -32,10 +32,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Use the official SDK's extractAndWait for a seamless experience
-    const job = await client.extractAndWait(buffer, {
+    // The Next.js formData.get() already returns a standard Web API File object.
+    // The SDK natively accepts File | Blob.
+    const job = await client.extractAndWait(file, {
       filename: file.name,
     });
 

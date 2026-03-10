@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       </html>
     `;
 
-    const job = await client.convertAndWait({
+    const job = await client.generateAndWait({
       html,
       filename: `performance_report_${Date.now()}.pdf`,
       tailwind: true
