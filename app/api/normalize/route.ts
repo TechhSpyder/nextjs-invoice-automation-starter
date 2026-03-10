@@ -33,7 +33,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Use the official SDK's "Closed-Loop" orchestrator (normalizeInvoice).
+    // In Edge runtimes, we pass the Uint8Array directly
+    const buffer = new Uint8Array(await file.arrayBuffer());
 
     // Call the orchestrator with the raw file buffer
     const response = await client.normalizeInvoice({
