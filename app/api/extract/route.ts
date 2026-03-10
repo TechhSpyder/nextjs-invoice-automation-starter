@@ -32,12 +32,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // In Next.js Edge/Serverless runtimes (like Vercel), it's safer to use Uint8Array directly
-    // rather than relying on Node.js Buffer namespace being globally available or typed identically.
-    const buffer = new Uint8Array(await file.arrayBuffer());
-
-    // Use the official SDK's extractAndWait for a seamless experience
-    const job = await client.extractAndWait(buffer, {
+    // The Next.js formData.get() already returns a standard Web API File object.
+    // The SDK natively accepts File | Blob.
+    const job = await client.extractAndWait(file, {
       filename: file.name,
     });
 

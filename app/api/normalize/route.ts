@@ -33,13 +33,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Use the official SDK's "Closed-Loop" orchestrator (normalizeInvoice).
-    // In Edge runtimes, we pass the Uint8Array directly
-    const buffer = new Uint8Array(await file.arrayBuffer());
-
-    // Call the orchestrator with the raw file buffer
+    // The Next.js formData.get() already returns a standard Web API File object.
+    // Call the orchestrator with the raw File object directly.
     const response = await client.normalizeInvoice({
-      file: buffer,
+      file: file,
       filename: file.name,
     });
 
